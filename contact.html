@@ -1,0 +1,112 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contact — UltraGC Foundation</title>
+  <link rel="icon" href="assets/images/logo.jpg" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <a href="index.html" data-fade>
+        <img src="assets/images/logo.jpg" alt="UltraGC Foundation logo">
+      </a>
+      <div>
+        <div class="title">UltraGC Foundation</div>
+        <div class="slogan">Helping the Less Privileged</div>
+      </div>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html" data-fade>Home</a>
+      <a href="about.html" data-fade>About</a>
+      <a href="projects.html" data-fade>Projects</a>
+      <a href="contact.html" data-fade>Contact</a>
+      <a href="contact.html" data-fade class="cta">Donate Now</a>
+    </nav>
+
+    <!-- Mobile Hamburger -->
+    <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    
+    <!-- Mobile Menu -->
+    <nav class="nav-mobile" id="mobileNav" aria-label="Mobile navigation">
+      <a href="index.html" data-fade>Home</a>
+      <a href="about.html" data-fade>About</a>
+      <a href="projects.html" data-fade>Projects</a>
+      <a href="contact.html" data-fade>Contact</a>
+      <a href="contact.html" data-fade class="cta">Donate Now</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="container fade-in">
+      <h2 class="section-title">Contact Us</h2>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="contact-card">
+          <h3 style="margin:0 0 8px">Send us a message</h3>
+          <form id="contactForm" onsubmit="return submitForm(event)" action="#">
+            <label>Name</label>
+            <input type="text" id="name" required />
+            <label style="margin-top:10px">Email</label>
+            <input type="email" id="email" required />
+            <label style="margin-top:10px">Message</label>
+            <textarea id="message" rows="6" required></textarea>
+            <div style="margin-top:12px">
+              <button class="btn" type="submit">Send Message</button>
+            </div>
+          </form>
+          <div id="formResult" style="margin-top:10px;color:var(--muted)"></div>
+        </div>
+
+        <div>
+          <div class="contact-card" style="margin-bottom:12px">
+            <h3 style="margin:0 0 8px">Get in touch</h3>
+            <p class="about-text">Email: <a href="mailto:ultragcfoundation@gmail.com">ultragcfoundation@gmail.com</a></p>
+            <p class="about-text">Facebook: <a href="https://www.facebook.com/Edithultragcfoundation" target="_blank">Edith Ultragc Foundation</a></p>
+            <p class="about-text">Address: Lokoja, Kogi State, Nigeria</p>
+          </div>
+
+          <div class="contact-card">
+            <h3 style="margin:0 0 8px">Donate</h3>
+            <p class="about-text">For now, click the Donate Now button to reach our contact page. We'll add an online payment option soon.</p>
+            <a href="mailto:ultragcfoundation@gmail.com" class="btn" style="display:inline-block;margin-top:8px">Donate via Email</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      function submitForm(e){
+        e.preventDefault();
+        var name = document.getElementById('name').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var message = document.getElementById('message').value.trim();
+        if(!name || !email || !message){ 
+          document.getElementById('formResult').textContent = 'Please fill all fields.'; 
+          return false; 
+        }
+        // For now we simulate a successful send. In future this can POST to a server or use Formspree / Getform.
+        document.getElementById('formResult').textContent = 'Thanks '+name+', your message has been received.';
+        document.getElementById('contactForm').reset();
+        return false;
+      }
+    </script>
+  </main>
+
+  <footer class="footer">
+    <div>© 2025 UltraGC Foundation</div>
+    <div class="social">Email: <a href="mailto:ultragcfoundation@gmail.com">ultragcfoundation@gmail.com</a> &nbsp; | &nbsp;
+      <a href="https://www.facebook.com/Edithultragcfoundation" target="_blank">Facebook</a>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

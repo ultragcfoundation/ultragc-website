@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UltraGC Foundation — Gallery</title>
+<style>
+  :root{ --gold:#c1973d; --muted:#6b7280; --bg:#f7f6f3; --dark:#111}
+  *{box-sizing:border-box}
+  body{font-family:Inter,system-ui,Arial, sans-serif;background:var(--bg);margin:0;color:var(--dark);-webkit-font-smoothing:antialiased}
+  header{padding:18px 16px;background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-index:30}
+  .brand{display:flex;gap:12px;align-items:center;max-width:1200px;margin:auto}
+  .brand img{height:48px;border-radius:6px}
+  .brand .txt{line-height:1}
+  .brand .txt .title{font-weight:700}
+  .brand .txt .slogan{font-size:13px;color:var(--muted)}
+
+  main{max-width:1100px;margin:28px auto;padding:12px}
+  h1{color:var(--gold);text-align:center;margin:6px 0 10px;font-size:28px}
+  .intro{color:var(--muted);text-align:center;margin-bottom:18px}
+
+  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:18px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap}
+  .filters button{background:#fff;border:1px solid #eee;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+  .filters button.active{background:var(--gold);color:#000;border-color:var(--gold)}
+  .search{display:flex;align-items:center;gap:8px}
+  .search input{padding:8px 12px;border-radius:8px;border:1px solid #ddd;min-width:200px}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+  .tile{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(16,24,40,0.04);position:relative;cursor:pointer;transition:transform .25s ease, box-shadow .25s ease}
+  .tile img, .tile video{width:100%;height:160px;object-fit:cover;display:block}
+  .tile .meta{padding:8px 10px;font-size:13px;color:var(--muted)}
+  .tile:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(16,24,40,0.08)}
+
+  .load-more{display:flex;justify-content:center;margin-top:18px}
+  .btn{background:var(--gold);color:#000;padding:10px 16px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+
+  /* Lightbox / fullscreen */
+  #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;padding:20px}
+  #lb-inner{max-width:1100px;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+  #lb-media{max-width:100%;max-height:80vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+  #lb-caption{color:#fff;text-align:center;font-size:16px;max-width:95%}
+  .lb-close{position:absolute;top:18px;right:20px;color:#fff;font-size:30px;cursor:pointer}
+  .lb-nav{position:absolute;top:50%;transform:translateY(-50%);color:#fff;font-size:40px;cursor:pointer;padding:8px}
+  .lb-prev{left:10px}.lb-next{right:10px}
+
+  /* small screens */
+  @media (max-width:600px){
+    .tile img, .tile video{height:130px}
+    .search input{min-width:120px}
+    h1{font-size:22px}
+  }
+
+  /* subtle fade animations */
+  .fade-in{animation:fadeIn .5s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="assets/images/logo.jpg" alt="UltraGC Logo" onerror="this.style.display='none'">
+    <div class="txt">
+      <div class="title">UltraGC Foundation</div>
+      <div class="slogan">Helping the Less Privileged</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h1>Photo & Video Gallery</h1>
+  <p class="intro">Browse our programmes: use filters, search captions, click to open fullscreen, or play videos.</p>
+
+  <div class="controls">
+    <div class="filters" id="filters">
+      <button class="active" data-cat="all">All</button>
+      <button data-cat="outreach">Outreach</button>
+      <button data-cat="widows">Widows</button>
+      <button data-cat="orphans">Orphans</button>
+      <button data-cat="events">Events</button>
+      <button data-cat="scholarships">Scholarships</button>
+    </div>
+
+    <div class="search" style="margin-left:10px">
+      <input id="searchInput" placeholder="Search by caption or filename..." />
+      <button id="searchBtn" class="btn" style="padding:8px 12px">Search</button>
+    </div>
+  </div>
+
+  <div id="gallery" class="gallery-grid fade-in"></div>
+
+  <div class="load-more">
+    <button id="loadMore" class="btn">Load more</button>
+  </div>
+</main>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" aria-hidden="true">
+  <div class="lb-close" id="lbClose">&times;</div>
+  <div class="lb-nav lb-prev" id="lbPrev">&#10094;</div>
+  <div class="lb-nav lb-next" id="lbNext">&#10095;</div>
+
+  <div id="lb-inner">
+    <div id="lb-media-wrap">
+      <!-- image or video will be injected here -->
+      <img id="lb-media" src="" alt="" style="display:none"/>
+      <video id="lb-video" controls style="display:none;max-width:100%;max-height:80vh;border-radius:10px"></video>
+    </div>
+    <div id="lb-caption"></div>
+  </div>
+</div>
+
+<script>
+/* ===============================
+   CONFIGURATION
+   - Files live in /images/
+   - Supported image ext: jpg,jpeg,png,webp
+   - Supported video ext: mp4,webm
+   - Optional naming convention:
+       category--caption--filename.ext
+     Example:
+       outreach--community-outreach-2025--img12.jpg
+   - If you don't use naming convention, filename (without ext) will be used as caption.
+   =============================== */
+
+const IMAGE_FOLDER = 'images/';
+const BATCH = 20;        // how many sequential indices to try per "Load more"
+const MAX_INDEX = 800;   // max sequential index to try (safety)
+const MISS_LIMIT = 35;   // stop scanning after many consecutive misses
+const SUPPORTED_IMAGES = ['jpg','jpeg','png','webp'];
+const SUPPORTED_VIDEOS = ['mp4','webm'];
+
+let nextIndex = 1;        // next numeric index to try (img1, img2, ...)
+let consecutiveMisses = 0;
+let items = [];           // loaded items (objects)
+let filteredItems = [];   // after filter/search
+let currentFilter = 'all';
+
+// helpers
+function extMatches(filename, exts){
+  const e = filename.split('.').pop().toLowerCase();
+  return exts.includes(e);
+}
+function deriveFromName(name){
+  // remove extension
+  const base = name.replace(/\.[^/.]+$/, "");
+  // If naming convention category--caption--file, extract
+  const parts = base.split('--');
+  if(parts.length >= 3){
+    return { category: parts[0].toLowerCase(), caption: parts[1].replace(/[-_]/g,' '), filename: parts.slice(2).join('--') };
+  }
+  // fallback: try category--caption or just name
+  if(parts.length === 2){
+    return { category: 'uncategorized', caption: parts[1].replace(/[-_]/g,' '), filename: parts[0] };
+  }
+  return { category: 'uncategorized', caption: base.replace(/[-_]/g,' '), filename: base };
+}
+
+/* Try to detect a file: image first, then video.
+   Returns a Promise that resolves to an item object or null.
+   item = {type:'image'|'video', src: 'images/xxx.ext', caption, category}
+*/
+function tryLoadIndex(idx){
+  return new Promise((resolve) => {
+    if(idx > MAX_INDEX){ resolve(null); return; }
+
+    const tryImageExt = (i, exts, cb) => {
+      if(i >= exts.length){ cb(false); return; }
+      const url = `${IMAGE_FOLDER}img${idx}.${exts[i]}`;
+      const img = new Image();
+      img.onload = () => cb({type:'image', src: url, name:`img${idx}.${exts[i]}`});
+      img.onerror = () => tryImageExt(i+1, exts, cb);
+      img.src = url;
+    };
+
+    const tryVideoExt = (i, exts, cb) => {
+      if(i >= exts.length){ cb(false); return; }
+      const url = `${IMAGE_FOLDER}img${idx}.${exts[i]}`;
+      const vid = document.createElement('video');
+      let handled = false;
+      vid.onloadedmetadata = () => { if(!handled){ handled = true; cb({type:'video', src: url, name:`img${idx}.${exts[i]}`}); } };
+      vid.onerror = () => {
+        if(!handled){ handled = true; tryVideoExt(i+1, exts, cb); }
+      };
+      vid.preload = 'metadata';
+      vid.src = url;
+    };
+
+    // first attempt images
+    tryImageExt(0, SUPPORTED_IMAGES, (res) => {
+      if(res){ resolve(res); return; }
+      // then attempt videos
+      tryVideoExt(0, SUPPORTED_VIDEOS, (vres) => {
+        if(vres){ resolve(vres); return; }
+        resolve(null);
+      });
+    });
+
+  });
+}
+
+// load a batch of sequential indices
+async function loadBatch(){
+  let loaded = 0;
+  for(let i=0;i<BATCH;i++){
+    if(consecutiveMisses >= MISS_LIMIT) break;
+    const idx = nextIndex++;
+    const res = await tryLoadIndex(idx);
+    if(res){
+      consecutiveMisses = 0;
+      // Derive caption & category from name if user used convention
+      const meta = deriveFromName(res.name);
+      const item = {
+        type: res.type,
+        src: res.src,
+        caption: meta.caption || res.name,
+        category: meta.category || 'uncategorized',
+        index: items.length
+      };
+      items.push(item);
+      renderTile(item);
+      loaded++;
+    } else {
+      consecutiveMisses++;
+    }
+    if(nextIndex > MAX_INDEX) break;
+  }
+  if(loaded === 0 && consecutiveMisses >= MISS_LIMIT){
+    // hide Load more if no more files
+    document.getElementById('loadMore').style.display = 'none';
+  }
+}
+
+// render a single tile into the grid
+function renderTile(item){
+  const gallery = document.getElementById('gallery');
+  const tile = document.createElement('div');
+  tile.className = 'tile fade-in';
+  tile.dataset.category = item.category;
+
+  if(item.type === 'image'){
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = item.caption;
+    img.loading = 'lazy';
+    img.onclick = () => openLightboxBySrc(item);
+    tile.appendChild(img);
+  } else {
+    // show video thumbnail using the video element but muted and paused
+    const vid = document.createElement('video');
+    vid.src = item.src;
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.loop = true;
+    vid.preload = 'metadata';
+    vid.onclick = () => openLightboxBySrc(item);
+    // try to play a tiny preview (some browsers require user gesture; it's okay if it doesn't autoplay)
+    vid.addEventListener('loadeddata', () => { try{ vid.play(); }catch(e){} });
+    tile.appendChild(vid);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.textContent = `${capitalize(item.caption)} • ${capitalize(item.category)}`;
+  tile.appendChild(meta);
+
+  gallery.appendChild(tile);
+}
+
+// simple capitalize
+function capitalize(s){
+  if(!s) return '';
+  return s.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/* FILTERS & SEARCH */
+document.getElementById('filters').addEventListener('click', (e) => {
+  if(e.target.matches('button')){
+    document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentFilter = e.target.dataset.cat;
+    applyFilterSearch();
+  }
+});
+document.getElementById('searchBtn').addEventListener('click', applyFilterSearch);
+document.getElementById('searchInput').addEventListener('keyup', (e) => {
+  if(e.key === 'Enter') applyFilterSearch();
+});
+
+function applyFilterSearch(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const tiles = document.querySelectorAll('#gallery .tile');
+  tiles.forEach(tile => {
+    const caption = tile.querySelector('.meta')?.textContent.toLowerCase() || '';
+    const cat = tile.dataset.category;
+    const matchFilter = (currentFilter === 'all' || cat === currentFilter || currentFilter === 'uncategorized');
+    const matchSearch = q === '' || caption.includes(q);
+    tile.style.display = (matchFilter && matchSearch) ? 'block' : 'none';
+  });
+}
+
+/* =========================
+   LIGHTBOX / SLIDESHOW
+   ========================= */
+
+let lbIndex = 0; // index into items array for currently open item
+
+function findItemIndexBySrc(src){
+  return items.findIndex(it => it.src === src);
+}
+
+function openLightboxBySrc(item){
+  lbIndex = findItemIndexBySrc(item.src);
+  if(lbIndex < 0) return;
+  showLightbox();
+}
+
+function showLightbox(){
+  const lb = document.getElementById('lightbox');
+  const imgEl = document.getElementById('lb-media');
+  const vidEl = document.getElementById('lb-video');
+  const captionEl = document.getElementById('lb-caption');
+
+  const current = items[lbIndex];
+  if(!current) return;
+
+  // set caption
+  captionEl.textContent = `${capitalize(current.caption)} — ${capitalize(current.category)}`;
+
+  // show correct media
+  if(current.type === 'image'){
+    vidEl.style.display = 'none';
+    vidEl.pause();
+    imgEl.style.display = 'block';
+    imgEl.src = current.src;
+  } else {
+    imgEl.style.display = 'none';
+    vidEl.style.display = 'block';
+    vidEl.src = current.src;
+    vidEl.load();
+    vidEl.play().catch(()=>{ /* autoplay may be blocked */ });
+  }
+
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(){
+  document.getElementById('lightbox').style.display = 'none';
+  const vid = document.getElementById('lb-video');
+  if(vid){ vid.pause(); vid.currentTime = 0; }
+  document.body.style.overflow = '';
+}
+
+document.getElementById('lbClose').addEventListener('click', closeLightbox);
+document.getElementById('lbNext').addEventListener('click', () => {
+  // next visible item
+  lbIndex = (lbIndex + 1) % items.length;
+  showLightbox();
+});
+document.getElementById('lbPrev').addEventListener('click', () => {
+  lbIndex = (lbIndex - 1 + items.length) % items.length;
+  showLightbox();
+});
+
+// close when clicking outside media
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if(e.target.id === 'lightbox') closeLightbox();
+});
+
+// keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if(document.getElementById('lightbox').style.display === 'flex'){
+    if(e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % items.length; showLightbox(); }
+    if(e.key === 'ArrowLeft') { lbIndex = (lbIndex - 1 + items.length) % items.length; showLightbox(); }
+    if(e.key === 'Escape') closeLightbox();
+  }
+});
+
+/* LOAD MORE button */
+document.getElementById('loadMore').addEventListener('click', async () => {
+  document.getElementById('loadMore').disabled = true;
+  document.getElementById('loadMore').textContent = 'Loading...';
+  await loadBatch();
+  document.getElementById('loadMore').disabled = false;
+  document.getElementById('loadMore').textContent = 'Load more';
+  applyFilterSearch();
+});
+
+// Start by loading one batch
+loadBatch();
+
+</script>
+</body>
+</html>
