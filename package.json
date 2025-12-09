@@ -1,0 +1,7 @@
+{
+  "name": "ultragc-functions",
+  "version": "1.0.0",
+  "dependencies": {
+    "cloudinary": "^1.35.0"
+  }
+}
