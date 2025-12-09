@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — UltraGC</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#f7f6f3;
+      margin:0;
+      padding:0;
+    }
+
+    header {
+      background:#fff;
+      padding:16px;
+      border-bottom:1px solid #ddd;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .brand {
+      font-size:18px;
+      font-weight:bold;
+      color:#c1973d;
+    }
+
+    .logout {
+      background:#c1973d;
+      color:#000;
+      padding:8px 14px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    main {
+      max-width:900px;
+      margin:30px auto;
+      padding:20px;
+    }
+
+    h2 {
+      color:#c1973d;
+      margin-bottom:10px;
+    }
+
+    .cards {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.08);
+      text-align:center;
+    }
+
+    .card button {
+      margin-top:12px;
+      padding:10px 14px;
+      border:none;
+      background:#c1973d;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">UltraGC Foundation — Admin</div>
+  <button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<main>
+  <h2>Dashboard</h2>
+  <p>Welcome! Select an action below:</p>
+
+  <div class="cards">
+
+    <div class="card">
+      <h3>Upload New Pictures</h3>
+      <p>Add photos/videos to the gallery.</p>
+      <button onclick="openUploader()">Upload</button>
+    </div>
+
+    <div class="card">
+      <h3>Manage Gallery</h3>
+      <p>View, edit captions, or delete files.</p>
+      <button onclick="goTo('manage-gallery.html')">Open Gallery Manager</button>
+    </div>
+
+    <div class="card">
+      <h3>Settings</h3>
+      <p>Future options: categories, admins, etc.</p>
+      <button disabled>Coming Soon</button>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+<script>
+/* Redirect if NOT logged in */
+netlifyIdentity.on('init', user => {
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+});
+
+/* Logout */
+function logout() {
+  netlifyIdentity.logout();
+  window.location.href = 'login.html';
+}
+
+/* Uploader Button (Cloudinary will be attached later) */
+function openUploader() {
+  alert("Uploader not connected yet — we'll set it up next.");
+}
+
+/* Navigation */
+function goTo(page) {
+  window.location.href = page;
+}
+</script>
+
+</body>
+</html>
