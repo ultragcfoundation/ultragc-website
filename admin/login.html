@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — UltraGC</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#f7f6f3;
+      margin:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+    .box {
+      background:#fff;
+      padding:30px;
+      border-radius:10px;
+      width:300px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.1);
+      text-align:center;
+    }
+    input {
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+      border:1px solid #ccc;
+      border-radius:6px;
+    }
+    button {
+      width:100%;
+      padding:12px;
+      background:#c1973d;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Admin Login</h2>
+
+  <button onclick="login()">Sign In with Netlify</button>
+</div>
+
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+<script>
+function login() {
+  netlifyIdentity.open();
+}
+
+netlifyIdentity.on('login', user => {
+  window.location.href = 'dashboard.html';
+});
+</script>
+
+</body>
+</html>
