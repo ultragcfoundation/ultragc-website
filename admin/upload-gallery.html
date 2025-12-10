@@ -1,59 +1,5 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Upload to Gallery — UltraGC Admin</title>
-<style>
-  body{font-family:Arial, sans-serif;background:#f7f6f3;margin:0}
-  header{background:#fff;padding:14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
-  .brand{font-weight:700;color:#c1973d}
-  main{max-width:600px;margin:36px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-  label{display:block;margin-top:12px;font-weight:700}
-  input[type="text"], select {width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
-  input[type=file]{margin-top:10px}
-  .btn{margin-top:14px;display:inline-block;padding:12px 16px;border-radius:8px;border:none;background:#c1973d;color:#000;font-weight:700;cursor:pointer}
-  #preview{margin-top:12px}
-  #preview img, #preview video{width:100%;max-height:260px;object-fit:cover;border-radius:8px}
-  #progress{height:10px;background:#eee;border-radius:8px;overflow:hidden;margin-top:10px;display:none}
-  #bar{height:100%;width:0;background:#c1973d}
-</style>
-</head>
-<body>
-<header>
-  <div class="brand">UltraGC Admin — Upload</div>
-  <button onclick="location.href='dashboard.html'" style="background:#fff;border:1px solid #ddd;padding:8px;border-radius:8px;cursor:pointer">Back</button>
-</header>
-
-<main>
-  <h2 style="color:#c1973d;margin:0 0 6px">Upload new gallery item</h2>
-  <p style="color:#666;margin:0 0 12px">Caption and category are saved automatically.</p>
-
-  <label>Caption</label>
-  <input id="caption" type="text" placeholder="e.g. Visit to DG office - Nov 2025">
-
-  <label>Category</label>
-  <select id="category">
-    <option value="outreach">Outreach</option>
-    <option value="widows">Widows</option>
-    <option value="orphans">Orphans</option>
-    <option value="events">Events</option>
-    <option value="scholarships">Scholarships</option>
-  </select>
-
-  <label>File (image or video)</label>
-  <input id="file" type="file" accept="image/*,video/*">
-
-  <div id="preview"></div>
-
-  <div id="progress"><div id="bar"></div></div>
-
-  <button id="uploadBtn" class="btn">Upload</button>
-  <div id="msg" style="margin-top:12px;color:#333;font-weight:700"></div>
-</main>
-
 <script>
-const cloudName = "dfqdlwwef";
+const cloudName = window.CLOUDINARY_CLOUD_NAME;
 const uploadPreset = "unsigned_preset";
 const folderName = "ultragc_gallery";
 
@@ -85,8 +31,7 @@ uploadBtn.addEventListener('click', () => {
   form.append('file', f);
   form.append('upload_preset', uploadPreset);
   form.append('folder', folderName);
-  form.append('tags', folderName); // tag items so we can list by tag
-  // save caption and category in context so it appears as resource.context.custom.caption etc
+  form.append('tags', folderName);
   form.append('context', `caption=${caption}|category=${category}`);
 
   const xhr = new XMLHttpRequest();
@@ -101,21 +46,25 @@ uploadBtn.addEventListener('click', () => {
     uploadBtn.disabled = false;
     if(xhr.status === 200){
       msg.textContent = "Upload successful — it will appear in the gallery shortly.";
-      // reset UI
       fileInput.value = "";
       preview.innerHTML = "";
       bar.style.width = "0%";
       progressWrap.style.display = 'none';
-      // optionally redirect to manage page
       setTimeout(()=> location.href = 'manage-gallery.html', 900);
     } else {
       msg.textContent = "Upload failed. See console.";
       console.error(xhr.responseText);
     }
   };
-  xhr.onerror = () => { uploadBtn.disabled=false; msg.textContent='Upload error.'; };
+  xhr.onerror = () => {
+    uploadBtn.disabled = false;
+    msg.textContent='Upload error.';
+  };
   xhr.send(form);
 });
 </script>
-</body>
-</html>
+
+<!-- Inject cloud name from Netlify environment variable -->
+<script>
+  window.CLOUDINARY_CLOUD_NAME = "{{CLOUDINARY_CLOUD_NAME}}";
+</script>
