@@ -1,181 +1,211 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Manage Gallery — UltraGC Admin</title>
-<style>
-  body{font-family:Arial, sans-serif;background:#f7f6f3;margin:0}
-  header{background:#fff;padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
-  .brand{font-weight:700;color:#c1973d}
-  main{max-width:1100px;margin:24px auto;padding:12px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-  .card{background:#fff;padding:10px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-  .card img,.card video{width:100%;height:150px;object-fit:cover;border-radius:8px}
-  .input, select{width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid #ddd}
-  .btn{margin-top:8px;padding:10px;border-radius:8px;border:none;background:#c1973d;color:#000;font-weight:700;cursor:pointer;width:100%}
-  .del{background:#b30000;color:#fff}
-  .muted{color:#666;margin-top:6px}
-</style>
+  <meta charset="UTF-8" />
+  <title>Manage Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #msg {
+      text-align: center;
+      color: #c0392b;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .actions button {
+      flex: 1;
+      margin: 0 3px;
+      padding: 8px;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-hide {
+      background: #f39c12;
+      color: #fff;
+    }
+
+    .btn-show {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .hidden-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 3px 6px;
+      font-size: 11px;
+      border-radius: 3px;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="brand">UltraGC Admin — Manage Gallery</div>
-  <div>
-    <button onclick="location.href='dashboard.html'" style="margin-right:8px;padding:8px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer">Back</button>
-    <button onclick="location.href='upload-gallery.html'" style="padding:8px;border-radius:8px;border:none;background:#c1973d;cursor:pointer;font-weight:700">Upload</button>
-  </div>
-</header>
+  <h1>Gallery Items</h1>
+  <p id="msg"></p>
 
-<main>
-  <h2 style="color:#c1973d;margin:0 0 6px">Gallery Items</h2>
-  <p class="muted">Items listed here are those uploaded with tag <strong>ultragc_gallery</strong>.</p>
+  <div id="gallery" class="grid"></div>
 
-  <div id="grid" class="grid"></div>
-  <div id="msg" style="margin-top:12px;font-weight:700;color:#333"></div>
-</main>
+  <script>
+    const galleryEl = document.getElementById('gallery');
+    const msgEl = document.getElementById('msg');
 
-<script>
-/* PUBLIC cloud name (safe) */
-const cloudName = "dfqdlwwef";
-const listTag = "ultragc_gallery";    // The tag we used in upload-gallery.html
+    async function fetchGallery() {
+      msgEl.textContent = 'Loading gallery...';
 
-/* Fetch Cloudinary list by tag */
-async function fetchList(){
-  const url = `https://res.cloudinary.com/${cloudName}/image/list/${listTag}.json?_=${Date.now()}`;
+      try {
+        const res = await fetch('/.netlify/functions/list-gallery');
+        if (!res.ok) throw new Error('Fetch failed');
 
-  try{
-    const res = await fetch(url);
-    if(!res.ok) throw new Error("Cloudinary returned no list");
+        const items = await res.json();
 
-    const data = await res.json();
-    renderGrid(data.resources || []);
-  }catch(err){
-    document.getElementById('msg').textContent =
-      "Unable to load gallery list. If new, please upload at least one file.";
-    console.error(err);
-  }
-}
+        if (!items.length) {
+          msgEl.textContent = 'No gallery items found.';
+          return;
+        }
 
-/* Render cards */
-function renderGrid(resources){
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
+        msgEl.textContent = '';
+        renderGallery(items);
 
-  if(!resources.length){
-    grid.innerHTML = '<p>No items uploaded yet.</p>';
-    return;
-  }
-
-  resources.forEach(r=>{
-    const base = `https://res.cloudinary.com/${cloudName}/`;
-    const isVideo = (r.format === "mp4" || r.format === "webm");
-
-    const url = `${base}${isVideo ? 'video' : 'image'}/upload/${r.public_id}.${r.format}`;
-
-    const caption = r.context?.custom?.caption || "";
-    const category = r.context?.custom?.category || "";
-
-    const card = document.createElement('div');
-    card.className = "card";
-
-    card.innerHTML = `
-      ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" alt="">`}
-
-      <div style="margin-top:8px;font-weight:700">${escapeHtml(caption)}</div>
-      <div class="muted">${escapeHtml(category)}</div>
-
-      <label style="margin-top:8px;font-weight:700">Edit caption</label>
-      <input class="input" data-id="${r.public_id}" value="${escapeHtmlAttr(caption)}" />
-
-      <label style="margin-top:8px;font-weight:700">Change category</label>
-      <select class="input" data-id-cat="${r.public_id}">
-        <option value="">-- select --</option>
-        <option value="outreach"${category==='outreach'?' selected':''}>Outreach</option>
-        <option value="widows"${category==='widows'?' selected':''}>Widows</option>
-        <option value="orphans"${category==='orphans'?' selected':''}>Orphans</option>
-        <option value="events"${category==='events'?' selected':''}>Events</option>
-        <option value="scholarships"${category==='scholarships'?' selected':''}>Scholarships</option>
-      </select>
-
-      <button class="btn" data-save="${r.public_id}">Save</button>
-      <button class="btn del" data-del="${r.public_id}">Delete</button>
-    `;
-
-    grid.appendChild(card);
-  });
-
-  document.querySelectorAll("[data-save]").forEach(btn=>{
-    btn.onclick = saveHandler;
-  });
-  document.querySelectorAll("[data-del]").forEach(btn=>{
-    btn.onclick = delHandler;
-  });
-}
-
-/* Escape HTML */
-function escapeHtml(s){ return String(s||"").replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
-function escapeHtmlAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
-
-/* SAVE (calls Netlify function update-metadata.js) */
-async function saveHandler(e){
-  const id = e.currentTarget.dataset.save;
-  const caption = document.querySelector(`input[data-id="${id}"]`).value.trim();
-  const category = document.querySelector(`select[data-id-cat="${id}"]`).value;
-
-  document.getElementById("msg").textContent = "Saving...";
-
-  try{
-    const res = await fetch("/.netlify/functions/update-metadata", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ public_id: id, caption, category })
-    });
-
-    const j = await res.json();
-
-    if(res.ok){
-      document.getElementById("msg").textContent = "Saved!";
-      fetchList();
-    } else {
-      document.getElementById("msg").textContent = "Save failed: " + j.error;
+      } catch (err) {
+        console.error(err);
+        msgEl.textContent = 'Unable to load gallery list.';
+      }
     }
-  }catch(err){
-    document.getElementById("msg").textContent = "Save failed.";
-  }
-}
 
-/* DELETE (calls Netlify function delete-resource.js) */
-async function delHandler(e){
-  const id = e.currentTarget.dataset.del;
+    function renderGallery(items) {
+      galleryEl.innerHTML = '';
 
-  if(!confirm("Delete this item?")) return;
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
 
-  document.getElementById("msg").textContent = "Deleting...";
+        const img = document.createElement('img');
+        img.src = item.secure_url;
 
-  try{
-    const res = await fetch("/.netlify/functions/delete-resource", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ public_id: id })
-    });
+        card.appendChild(img);
 
-    const j = await res.json();
+        if (item.context && item.context.custom && item.context.custom.hidden === 'true') {
+          const label = document.createElement('div');
+          label.className = 'hidden-label';
+          label.textContent = 'HIDDEN';
+          card.appendChild(label);
+        }
 
-    if(res.ok){
-      document.getElementById("msg").textContent = "Deleted!";
-      fetchList();
-    } else {
-      document.getElementById("msg").textContent = "Delete failed: " + j.error;
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const btnDelete = document.createElement('button');
+        btnDelete.textContent = 'Delete';
+        btnDelete.className = 'btn-delete';
+        btnDelete.onclick = () => deleteItem(item.public_id);
+
+        const isHidden = item.context?.custom?.hidden === 'true';
+
+        const btnToggle = document.createElement('button');
+        btnToggle.textContent = isHidden ? 'Show' : 'Hide';
+        btnToggle.className = isHidden ? 'btn-show' : 'btn-hide';
+        btnToggle.onclick = () => toggleVisibility(item.public_id, isHidden);
+
+        actions.appendChild(btnToggle);
+        actions.appendChild(btnDelete);
+
+        card.appendChild(actions);
+        galleryEl.appendChild(card);
+      });
     }
-  }catch(err){
-    document.getElementById("msg").textContent = "Delete failed.";
-  }
-}
 
-fetchList();
-</script>
+    async function deleteItem(publicId) {
+      if (!confirm('Delete this image permanently?')) return;
+
+      try {
+        const res = await fetch('/.netlify/functions/delete-resource', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ public_id: publicId })
+        });
+
+        if (!res.ok) throw new Error('Delete failed');
+        fetchGallery();
+
+      } catch (err) {
+        alert('Failed to delete image');
+        console.error(err);
+      }
+    }
+
+    async function toggleVisibility(publicId, currentlyHidden) {
+      try {
+        const res = await fetch('/.netlify/functions/update-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            public_id: publicId,
+            hidden: !currentlyHidden
+          })
+        });
+
+        if (!res.ok) throw new Error('Update failed');
+        fetchGallery();
+
+      } catch (err) {
+        alert('Failed to update visibility');
+        console.error(err);
+      }
+    }
+
+    fetchGallery();
+  </script>
 
 </body>
 </html>
