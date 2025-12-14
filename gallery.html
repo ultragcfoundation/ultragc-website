@@ -1,87 +1,18 @@
-<!<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gallery — UltraGC Foundation</title>
 
-  <!-- Main Site Styles -->
-  <link rel="stylesheet" href="assets/css/style.css">
-
-  <style>
-    /* Gallery-specific styles */
-    .gallery-container {
-      max-width: 1200px;
-      margin: 60px auto;
-      padding: 0 16px;
-    }
-
-    .gallery-title {
-      text-align: center;
-      font-size: 32px;
-      margin-bottom: 10px;
-      color: #c1973d;
-    }
-
-    .gallery-subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 40px;
-    }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 18px;
-    }
-
-    .gallery-card {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }
-
-    .gallery-card img,
-    .gallery-card video {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .gallery-info {
-      padding: 12px;
-    }
-
-    .gallery-caption {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .gallery-category {
-      font-size: 14px;
-      color: #777;
-    }
-
-    .gallery-message {
-      text-align: center;
-      font-weight: 700;
-      color: #777;
-      margin-top: 30px;
-    }
-  </style>
+  <!-- Your existing CSS -->
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
 <body>
 
-<!-- ================= HEADER / NAVIGATION ================= -->
 <header class="header">
   <div class="container">
-
-    <div class="logo">
-      <a href="index.html">UltraGC Foundation</a>
-    </div>
 
     <!-- Desktop Navigation -->
     <nav class="nav" aria-label="Main navigation">
@@ -113,74 +44,28 @@
   </div>
 </header>
 
-<!-- ================= GALLERY CONTENT ================= -->
-<main class="gallery-container">
-  <h1 class="gallery-title">Our Gallery</h1>
-  <p class="gallery-subtitle">Moments from our outreach, events, and programs</p>
+<main class="container">
 
-  <div id="galleryGrid" class="gallery-grid"></div>
-  <div id="galleryMsg" class="gallery-message"></div>
+  <section class="page-hero">
+    <h1>Our Gallery</h1>
+    <p>Moments from our outreach, programs, and community impact.</p>
+  </section>
+
+  <section class="gallery-grid" id="galleryGrid">
+    <p>Gallery items will appear here.</p>
+  </section>
+
 </main>
 
-<!-- ================= SCRIPTS ================= -->
-<script src="assets/js/main.js" defer></script>
+<footer class="footer">
+  <p>&copy; <span id="year"></span> UltraGC Foundation. All rights reserved.</p>
+</footer>
 
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
-  const cloudName = "dfqdlwwef";
-  const tag = "ultragc_gallery";
-
-  const grid = document.getElementById("galleryGrid");
-  const msg = document.getElementById("galleryMsg");
-
-  try {
-    const res = await fetch(
-      `https://res.cloudinary.com/${cloudName}/image/list/${tag}.json`
-    );
-
-    if (!res.ok) throw new Error("Gallery list not available");
-
-    const data = await res.json();
-    const items = data.resources || [];
-
-    if (!items.length) {
-      msg.textContent = "No gallery items available yet.";
-      return;
-    }
-
-    items.forEach(item => {
-      const isVideo = item.resource_type === "video";
-      const url = `https://res.cloudinary.com/${cloudName}/${isVideo ? "video" : "image"}/upload/${item.public_id}.${item.format}`;
-
-      const caption =
-        item.context?.custom?.caption || "";
-
-      const category =
-        item.context?.custom?.category || "";
-
-      const card = document.createElement("div");
-      card.className = "gallery-card";
-
-      card.innerHTML = `
-        ${isVideo
-          ? `<video src="${url}" controls></video>`
-          : `<img src="${url}" alt="${caption}">`
-        }
-        <div class="gallery-info">
-          <div class="gallery-caption">${caption}</div>
-          <div class="gallery-category">${category}</div>
-        </div>
-      `;
-
-      grid.appendChild(card);
-    });
-
-  } catch (err) {
-    msg.textContent = "Gallery is currently unavailable.";
-    console.error(err);
-  }
-});
+  document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
+<script src="assets/js/navigation.js"></script>
+
 </body>
-</html>pe
+    </html>
