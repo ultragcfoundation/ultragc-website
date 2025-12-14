@@ -10,24 +10,21 @@ exports.handler = async () => {
   try {
     const result = await cloudinary.search
       .expression("tags=ultragc_gallery")
+      .with_field("context")
       .sort_by("created_at", "desc")
       .max_results(100)
       .execute();
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(result.resources)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result.resources || [])
     };
 
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: error.message
-      })
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
